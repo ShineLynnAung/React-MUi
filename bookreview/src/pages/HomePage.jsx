@@ -1,13 +1,9 @@
 import {
     Avatar,
     Button,
-    FormControl,
     IconButton,
     InputBase,
-    InputLabel,
-    MenuItem,
     Paper,
-    Select,
     Stack,
     ThemeProvider,
     Box,
@@ -20,38 +16,37 @@ import {
   import React, { useEffect, useState } from "react";
   import theme from "../theme";
   import { Search, Menu } from "@mui/icons-material";
-  import { booksData } from "../constants/configData";
-  import { GetBusinessTypeAPI } from "../api/HomeController";
+  import { BookReviewAPI } from "../api/HomeController";
   
   export default function HomePage({ history }) {
     const [loading, setLoading] = useState(true);
-    const [data, setData] = useState([]);
-    const [chooseBusinessType, setChooseBusinessType] = useState("");
     const [drawerOpen, setDrawerOpen] = useState(false);
-  
+
+    const [data, setData] = useState([]);
     useEffect(() => {
-      const getBusinessList = async () => {
-        try {
-          const response = await GetBusinessTypeAPI();
-          console.log("Data", response);
-          setData(response.business_types || []);
-        } catch (error) {
-          console.error("Error fetching business types:", error);
-        } finally {
-          setLoading(false);
-        }
+      const getBookList = async () => {
+          try {
+              setLoading(true);
+              const response = await BookReviewAPI();
+              
+              console.log("API Response:", response);
+              
+              const booksData = Array.isArray(response.books) 
+                  ? response.books 
+                  : [];
+              
+              setData(booksData);
+              
+          } catch (error) {
+              console.error("Error:", error);
+              setData([]);
+          } finally {
+              setLoading(false);
+          }
       };
   
-      const timer = setTimeout(() => {
-        getBusinessList();
-      }, 1000);
-  
-      return () => clearTimeout(timer);
-    }, []);
-  
-    const handleChooseBusinessType = (event) => {
-      setChooseBusinessType(event.target.value);
-    };
+      getBookList();
+  }, []);
   
     const toggleDrawer = (open) => (event) => {
       if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -147,7 +142,7 @@ import {
                 </Box>
               </Stack>
               <Divider sx={{ my: 3, backgroundColor: 'rgba(255, 255, 255, 0.3)' }} />
-              {/* You can add more drawer items here if needed */}
+            
             </Box>
           </Drawer>
   
@@ -208,57 +203,33 @@ import {
                 </Paper>
               </Box>
             </Box>
-  
-            {/* Books Grid */}
+                  
             <Grid container spacing={3} sx={{ mt: 3, px: 1, mb: 1 }}>
-              {booksData.map((book) => (
-                <Grid item xs={12} sm={6} md={4} key={book.id}>
-                  <Paper
-                    sx={{
-                      overflow: "hidden",
-                      transition: "transform 0.3s, box-shadow 0.3s",
-                      "&:hover": {
-                        transform: "scale(1.05)",
-                        boxShadow: 3,
-                      },
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={book.path}
-                      alt={book.name}
-                      sx={{ width: "100%", height: 320, objectFit: "cover" }}
-                    />
-                    <Box sx={{ p: 2 }}>
-                      <Typography variant="h6" component="h2">
-                        {book.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {book.author}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
-              ))}
+            {data.map((book) => (
+              
+      <Grid item xs={12} sm={6} md={4} key={book.id}>
+        
+        <Paper
+         
+        >
+          <Box
+            component="img"
+            src={book.path}
+            alt={book.title}
+            sx={{ width: "100%", height: 320, objectFit: "cover" }}
+          />
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6" component="h2">
+              {book.title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {book.author}
+            </Typography>
+          </Box>
+        </Paper>
+      </Grid>
+    ))}
             </Grid>
-  
-            {/* Business Type List */}
-            <FormControl fullWidth sx={{ mt: 3, mb: 3, px: 2 }}>
-              <InputLabel id="business-type-label">Business Types</InputLabel>
-              <Select
-                labelId="business-type-label"
-                id="business-type-select"
-                value={chooseBusinessType}
-                label="Choose Business"
-                onChange={handleChooseBusinessType}
-              >
-                {data?.map((item, index) => (
-                  <MenuItem key={index} value={item.type}>
-                    {item.type}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
           </Box>
         </Box>
       </ThemeProvider>
